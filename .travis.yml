@@ -16,5 +16,14 @@ android:
 script:
   - ./gradlew assembleDebug
 
+deploy:
+  provider: releases
+  api_key: $GH_TOKEN
+  file: "app/build/outputs/apk/app-debug.apk"
+  skip_cleanup: true
+  on:
+    tags: true
+    branch: master
+
 notifications:
     email: false
