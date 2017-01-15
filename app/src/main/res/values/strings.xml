@@ -1,0 +1,18 @@
+<resources>
+    <string name="app_name">MockLocation</string>
+    <string name="latitude">Latitude</string>
+    <string name="longitude">Longitude</string>
+    <string name="altitude">Altitude</string>
+    <string name="service_enabled">Enabled</string>
+    <string name="service_disabled">Disabled</string>
+    <string name="start">Start</string>
+    <string name="stop">Stop</string>
+    <string name="open_map">Open map</string>
+    <string name="recent_location">Recent location</string>
+    <string name="mock_locations_alert">Mock locations are disabled in settings. Enable mock locations to continue.</string>
+    <string name="alert_ok">OK</string>
+    <string name="alert_cancel">Cancel</string>
+    <string name="recent_locations_title">Recent locations</string>
+    <string name="no_recent_locations_message">No recent locations</string>
+    <string name="map_region_selection_title">Select region</string>
+</resources>
