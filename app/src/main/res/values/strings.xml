@@ -2,6 +2,7 @@
     <string name="app_name">MockLocation</string>
     <string name="latitude">Latitude</string>
     <string name="longitude">Longitude</string>
+    <string name="number_hint">00.000000</string>
     <string name="altitude">Altitude</string>
     <string name="service_enabled">Enabled</string>
     <string name="service_disabled">Disabled</string>

@@ -5,7 +5,6 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.location.LocationManager;
 import android.os.Build;
 import android.provider.Settings;
 import android.support.v7.app.AlertDialog;
@@ -85,31 +84,31 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         preferences = getPreferences(Context.MODE_PRIVATE);
 
-        latText = (EditText) findViewById(R.id.lat_text);
+        latText = findViewById(R.id.lat_text);
         latText.setText(preferences.getString(PREF_LAT, "0"));
 
-        lonText = (EditText) findViewById(R.id.lon_text);
+        lonText = findViewById(R.id.lon_text);
         lonText.setText(preferences.getString(PREF_LON, "0"));
 
-        altText = (EditText) findViewById(R.id.alt_text);
+        altText = findViewById(R.id.alt_text);
         altText.setText(preferences.getString(PREF_ALT, "0"));
 
-        startProvider = (Button) findViewById(R.id.provider_start);
+        startProvider = findViewById(R.id.provider_start);
         startProvider.setOnClickListener(this);
 
-        stopProvider = (Button) findViewById(R.id.provider_stop);
+        stopProvider = findViewById(R.id.provider_stop);
         stopProvider.setOnClickListener(this);
         stopProvider.setClickable(false);
 
-        openMap = (Button) findViewById(R.id.open_map);
+        openMap = findViewById(R.id.open_map);
         openMap.setOnClickListener(this);
 
-        recentLocation = (Button) findViewById(R.id.recent_location);
+        recentLocation = findViewById(R.id.recent_location);
         recentLocation.setOnClickListener(this);
 
-        status = (TextView) findViewById(R.id.service_status_text);
+        status = findViewById(R.id.service_status_text);
 
-        provider = new MockLocationProvider(this, LocationManager.GPS_PROVIDER);
+        provider = new MockLocationProvider(this);
     }
 
     @Override
@@ -129,7 +128,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 try {
                     // Provider must be started before any mock locations set
                     provider.startProvider();
-                    provider.setLocation(lat, lon, alt, 1);
+                    provider.setLocation(lat, lon, alt);
                 } catch (SecurityException e) {
                     enableButtons();
                     showAlertDialog();
@@ -169,8 +168,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             try {
                 AppOpsManager opsManager = (AppOpsManager) getSystemService(Context.APP_OPS_SERVICE);
-                opsManager.checkOp(AppOpsManager.OPSTR_MOCK_LOCATION, android.os.Process.myUid(), BuildConfig.APPLICATION_ID);
-            } catch (RuntimeException e) {
+                if (opsManager != null) {
+                    opsManager.checkOp(AppOpsManager.OPSTR_MOCK_LOCATION, android.os.Process.myUid(), BuildConfig.APPLICATION_ID);
+                }
+            } catch (RuntimeException ex) {
                 showAlertDialog();
             }
         } else {

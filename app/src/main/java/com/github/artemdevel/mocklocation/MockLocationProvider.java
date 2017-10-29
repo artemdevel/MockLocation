@@ -7,36 +7,42 @@ import android.os.SystemClock;
 
 class MockLocationProvider {
 
-    private Context context;
-    private String providerName;
+    private static final float DEFAULT_ACCURACY = 1.f;
 
-    MockLocationProvider(Context context, String providerName) {
-        this.providerName = providerName;
+    private final Context context;
+
+    MockLocationProvider(Context context) {
         this.context = context;
     }
 
-    void setLocation(double lat, double lon, double alt, float accuracy) {
-        Location mockLocation = new Location(providerName);
+    void setLocation(double lat, double lon, double alt) {
+        Location mockLocation = new Location(LocationManager.GPS_PROVIDER);
         mockLocation.setLatitude(lat);
         mockLocation.setLongitude(lon);
         mockLocation.setAltitude(alt);
         mockLocation.setTime(System.currentTimeMillis());
-        mockLocation.setAccuracy(accuracy);
+        mockLocation.setAccuracy(DEFAULT_ACCURACY);
         mockLocation.setElapsedRealtimeNanos(SystemClock.elapsedRealtimeNanos());
 
         LocationManager lm = (LocationManager) context.getSystemService(Context.LOCATION_SERVICE);
-        lm.setTestProviderLocation(providerName, mockLocation);
+        if (lm != null) {
+            lm.setTestProviderLocation(LocationManager.GPS_PROVIDER, mockLocation);
+        }
     }
 
     void startProvider() {
         LocationManager lm = (LocationManager) context.getSystemService(Context.LOCATION_SERVICE);
-        lm.addTestProvider(providerName, false, false, false, false, true, true, true, 0, 5);
-        lm.setTestProviderEnabled(providerName, true);
+        if (lm != null) {
+            lm.addTestProvider(LocationManager.GPS_PROVIDER, false, false, false, false, true, true, true, 0, 5);
+            lm.setTestProviderEnabled(LocationManager.GPS_PROVIDER, true);
+        }
     }
 
     void stopProvider() {
         LocationManager lm = (LocationManager) context.getSystemService(Context.LOCATION_SERVICE);
-        lm.removeTestProvider(providerName);
+        if (lm != null) {
+            lm.removeTestProvider(LocationManager.GPS_PROVIDER);
+        }
     }
 
 }
