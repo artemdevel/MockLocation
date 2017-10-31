@@ -1,15 +1,20 @@
 package com.github.artemdevel.mocklocation;
 
 import android.app.AppOpsManager;
+import android.app.Notification;
+import android.app.NotificationManager;
+import android.app.PendingIntent;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Build;
 import android.provider.Settings;
+import android.support.v4.app.NotificationCompat;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
@@ -36,6 +41,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private static final String PREF_ALT = "alt";
     private static final String PREF_LOC = "loc";
     private static final String PREF_LOC_PTR = "loc_ptr";
+    private static final String CHANNEL_ID = "recent_locations";
+    private static final String CHANNEL_NAME = "Recent Location";
     private static final int LOC_LIMIT = 5; // up to 5 recent locations could be stored
     private static final int PLACE_PICKER_REQUEST = 100;
 
@@ -81,6 +88,17 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         checkMockLocationSetting();
+        Intent intent = getIntent();
+        if (intent != null) {
+            Bundle extras = intent.getExtras();
+            if (extras != null) {
+                Log.d("QQQQQ", "onCreate: " + extras.getString("name"));
+            } else {
+                Log.d("QQQQQ", "onCreate: No extras");
+            }
+        } else {
+            Log.d("QQQQQ", "onCreate: No intent");
+        }
 
         preferences = getPreferences(Context.MODE_PRIVATE);
 
@@ -133,6 +151,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     enableButtons();
                     showAlertDialog();
                 }
+
+                showRecentLocationNotifications();
                 break;
 
             case R.id.provider_stop:
@@ -298,6 +318,31 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             loc_ptr = 0;
         }
         preferences.edit().putInt(PREF_LOC_PTR, loc_ptr).apply();
+    }
+
+    private void showRecentLocationNotifications() {
+        NotificationManager manager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+        if (manager != null) {
+            for (int i = 0; i < LOC_LIMIT; i++) {
+                String pref_loc = String.format(Locale.US, "%s%d", PREF_LOC, i);
+                String location = preferences.getString(pref_loc, null);
+                if (location != null) {
+                    String locationName = location.split(",")[0];
+                    Intent intent = new Intent(this, MainActivity.class);
+                    intent.putExtra("name", locationName);
+                    PendingIntent pendingIntent = PendingIntent.getActivity(this, i + 1, intent, PendingIntent.FLAG_UPDATE_CURRENT);
+                    Notification notification = new NotificationCompat.Builder(this, CHANNEL_ID)
+                            .setSmallIcon(R.drawable.ic_place_white_24dp)
+                            .setContentTitle(CHANNEL_NAME)
+                            .setContentText(locationName)
+                            .setContentIntent(pendingIntent)
+                            .setOngoing(true)
+//                            .setAutoCancel(true)
+                            .build();
+                    manager.notify(i + 1, notification);
+                }
+            }
+        }
     }
 
 }
