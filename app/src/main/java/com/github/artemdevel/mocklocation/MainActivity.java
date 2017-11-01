@@ -327,17 +327,27 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 String pref_loc = String.format(Locale.US, "%s%d", PREF_LOC, i);
                 String location = preferences.getString(pref_loc, null);
                 if (location != null) {
-                    String locationName = location.split(",")[0];
-                    Intent intent = new Intent(this, MainActivity.class);
+                    String parts[] = location.split(",");
+                    String locationName = parts[0];
+                    double lat = Double.parseDouble(parts[1]);
+                    double lon = Double.parseDouble(parts[2]);
+
+                    Intent intent = new Intent(this, MockLocationService.class);
                     intent.putExtra("name", locationName);
-                    PendingIntent pendingIntent = PendingIntent.getActivity(this, i + 1, intent, PendingIntent.FLAG_UPDATE_CURRENT);
+                    intent.putExtra("lat", lat);
+                    intent.putExtra("lon", lon);
+                    PendingIntent pendingIntent = PendingIntent.getService(
+                            this,
+                            i + 1,
+                            intent,
+                            PendingIntent.FLAG_UPDATE_CURRENT);
                     Notification notification = new NotificationCompat.Builder(this, CHANNEL_ID)
                             .setSmallIcon(R.drawable.ic_place_white_24dp)
                             .setContentTitle(CHANNEL_NAME)
                             .setContentText(locationName)
                             .setContentIntent(pendingIntent)
                             .setOngoing(true)
-//                            .setAutoCancel(true)
+                            .setGroup(CHANNEL_NAME)
                             .build();
                     manager.notify(i + 1, notification);
                 }
