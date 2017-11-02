@@ -2,6 +2,7 @@ package com.github.artemdevel.mocklocation;
 
 import android.app.AppOpsManager;
 import android.app.Notification;
+import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.content.Context;
@@ -11,10 +12,10 @@ import android.content.SharedPreferences;
 import android.os.Build;
 import android.provider.Settings;
 import android.support.v4.app.NotificationCompat;
+import android.support.v4.app.NotificationManagerCompat;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
@@ -88,17 +89,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         checkMockLocationSetting();
-        Intent intent = getIntent();
-        if (intent != null) {
-            Bundle extras = intent.getExtras();
-            if (extras != null) {
-                Log.d("QQQQQ", "onCreate: " + extras.getString("name"));
-            } else {
-                Log.d("QQQQQ", "onCreate: No extras");
-            }
-        } else {
-            Log.d("QQQQQ", "onCreate: No intent");
-        }
 
         preferences = getPreferences(Context.MODE_PRIVATE);
 
@@ -158,6 +148,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             case R.id.provider_stop:
                 enableButtons();
                 provider.stopProvider();
+                NotificationManagerCompat.from(this).cancelAll();
                 break;
 
             case R.id.open_map:
@@ -323,6 +314,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private void showRecentLocationNotifications() {
         NotificationManager manager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
         if (manager != null) {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                NotificationChannel channel = new NotificationChannel(CHANNEL_ID, CHANNEL_NAME, NotificationManager.IMPORTANCE_LOW);
+                manager.createNotificationChannel(channel);
+            }
             for (int i = 0; i < LOC_LIMIT; i++) {
                 String pref_loc = String.format(Locale.US, "%s%d", PREF_LOC, i);
                 String location = preferences.getString(pref_loc, null);
@@ -347,7 +342,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                             .setContentText(locationName)
                             .setContentIntent(pendingIntent)
                             .setOngoing(true)
-                            .setGroup(CHANNEL_NAME)
                             .build();
                     manager.notify(i + 1, notification);
                 }
