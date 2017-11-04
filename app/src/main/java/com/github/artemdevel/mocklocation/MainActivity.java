@@ -9,6 +9,7 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.location.LocationManager;
 import android.os.Build;
 import android.provider.Settings;
 import android.support.v4.app.NotificationCompat;
@@ -35,7 +36,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
-public class MainActivity extends AppCompatActivity implements View.OnClickListener {
+public final class MainActivity extends AppCompatActivity implements View.OnClickListener {
 
     private static final String PREF_LAT = "lat";
     private static final String PREF_LON = "lon";
@@ -81,7 +82,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private Button openMap;
     private Button recentLocation;
     private TextView status;
-    private MockLocationProvider provider;
     private SharedPreferences preferences;
 
     @Override
@@ -115,8 +115,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         recentLocation.setOnClickListener(this);
 
         status = findViewById(R.id.service_status_text);
-
-        provider = new MockLocationProvider(this);
     }
 
     @Override
@@ -134,9 +132,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 preferences.edit().putString(PREF_ALT, altText.getText().toString()).apply();
 
                 try {
-                    // Provider must be started before any mock locations set
-                    provider.startProvider();
-                    provider.setLocation(lat, lon, alt);
+                    // Provider must be initialized before any mock locations set
+                    LocationManager locationManager = ((MockLocationApplication) getApplication()).getLocationManager();
+                    MockLocationUtils.startProvider(locationManager);
+                    MockLocationUtils.setLocation(locationManager, MockLocationUtils.buildLocation(lat, lon, alt));
                 } catch (SecurityException e) {
                     enableButtons();
                     showAlertDialog();
@@ -147,7 +146,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
             case R.id.provider_stop:
                 enableButtons();
-                provider.stopProvider();
+                MockLocationUtils.stopProvider(((MockLocationApplication) getApplication()).getLocationManager());
                 NotificationManagerCompat.from(this).cancelAll();
                 break;
 
@@ -331,13 +330,14 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     intent.putExtra("name", locationName);
                     intent.putExtra("lat", lat);
                     intent.putExtra("lon", lon);
+                    intent.putExtra("alt", 0.);
                     PendingIntent pendingIntent = PendingIntent.getService(
                             this,
                             i + 1,
                             intent,
                             PendingIntent.FLAG_UPDATE_CURRENT);
                     Notification notification = new NotificationCompat.Builder(this, CHANNEL_ID)
-                            .setSmallIcon(R.drawable.ic_place_white_24dp)
+                            .setSmallIcon(R.drawable.ic_location_white_24dp)
                             .setContentTitle(CHANNEL_NAME)
                             .setContentText(locationName)
                             .setContentIntent(pendingIntent)
