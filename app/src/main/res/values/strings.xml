@@ -11,6 +11,7 @@
     <string name="open_map">Open map</string>
     <string name="recent_location">Recent location</string>
     <string name="mock_locations_alert">Mock locations are disabled in settings. Enable mock locations to continue.</string>
+    <string name="locations_disabled_alert">Locations are disabled in settings. Enable Locations to continue. Set mode to <b>Device only</b>.</string>
     <string name="alert_ok">OK</string>
     <string name="alert_cancel">Cancel</string>
     <string name="recent_locations_title">Recent locations</string>

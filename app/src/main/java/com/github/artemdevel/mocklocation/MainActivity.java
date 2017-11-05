@@ -45,7 +45,8 @@ public final class MainActivity extends AppCompatActivity implements View.OnClic
     private static final String PREF_LOC_PTR = "loc_ptr";
     private static final String CHANNEL_ID = "recent_locations";
     private static final String CHANNEL_NAME = "Recent Location";
-    private static final int LOC_LIMIT = 5; // up to 5 recent locations could be stored
+    // NOTE: On Android 8+ more than 3 notifications are grouped into one notification
+    private static final int LOC_LIMIT = 3;
     private static final int PLACE_PICKER_REQUEST = 100;
 
     private final static LatLngBounds EU_BOUNDS = new LatLngBounds(new LatLng(27.6363, -31.2660), new LatLng(81.0087, 39.8693));
@@ -134,14 +135,19 @@ public final class MainActivity extends AppCompatActivity implements View.OnClic
                 try {
                     // Provider must be initialized before any mock locations set
                     LocationManager locationManager = ((MockLocationApplication) getApplication()).getLocationManager();
-                    MockLocationUtils.startProvider(locationManager);
-                    MockLocationUtils.setLocation(locationManager, MockLocationUtils.buildLocation(lat, lon, alt));
+                    if (locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
+                        MockLocationUtils.startProvider(locationManager);
+                        MockLocationUtils.setLocation(locationManager, MockLocationUtils.buildLocation(lat, lon, alt));
+                        showRecentLocationNotifications();
+                    } else {
+                        enableButtons();
+                        showLocationsDisabledAlertDialog();
+                    }
                 } catch (SecurityException e) {
                     enableButtons();
-                    showAlertDialog();
+                    showNoMockLocationAlertDialog();
                 }
 
-                showRecentLocationNotifications();
                 break;
 
             case R.id.provider_stop:
@@ -182,11 +188,11 @@ public final class MainActivity extends AppCompatActivity implements View.OnClic
                     opsManager.checkOp(AppOpsManager.OPSTR_MOCK_LOCATION, android.os.Process.myUid(), BuildConfig.APPLICATION_ID);
                 }
             } catch (RuntimeException ex) {
-                showAlertDialog();
+                showNoMockLocationAlertDialog();
             }
         } else {
             if (Settings.Secure.getString(getContentResolver(), Settings.Secure.ALLOW_MOCK_LOCATION).equals("0")) {
-                showAlertDialog();
+                showNoMockLocationAlertDialog();
             }
         }
     }
@@ -225,13 +231,31 @@ public final class MainActivity extends AppCompatActivity implements View.OnClic
         status.setTextColor(getResources().getColor(R.color.green));
     }
 
-    private void showAlertDialog() {
+    private void showNoMockLocationAlertDialog() {
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
         builder.setMessage(R.string.mock_locations_alert)
                 .setPositiveButton(R.string.alert_ok, new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
                         startActivityForResult(new Intent(android.provider.Settings.ACTION_APPLICATION_DEVELOPMENT_SETTINGS), 0);
+                    }
+                })
+                .setNegativeButton(R.string.alert_cancel, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+
+                    }
+                })
+                .create().show();
+    }
+
+    private void showLocationsDisabledAlertDialog() {
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setMessage(R.string.locations_disabled_alert)
+                .setPositiveButton(R.string.alert_ok, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        startActivityForResult(new Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS), 0);
                     }
                 })
                 .setNegativeButton(R.string.alert_cancel, new DialogInterface.OnClickListener() {
